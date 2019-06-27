@@ -1,3 +1,10 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Jun 26 21:33:50 2019
+
+@author: bz
+"""
 '''
 Parallel implementation of the Augmented Random Search method.
 Horia Mania --- hmania@berkeley.edu
@@ -144,7 +151,7 @@ class ARSLearner(object):
     Object class implementing the ARS algorithm.
     """
 
-    def __init__(self, env_name='HalfCheetah-v2',
+    def __init__(self, env_name='HalfCheetah-v1',
                  policy_params=None,
                  num_workers=32, 
                  num_deltas=320, 
@@ -163,7 +170,7 @@ class ARSLearner(object):
         env = gym.make(env_name)
         
         self.timesteps = 0
-        self.action_size = env.action_space.n
+        self.action_size = env.action_space.shape[0]
         self.ob_size = env.observation_space.shape[0]
         self.num_deltas = num_deltas
         self.deltas_used = deltas_used
@@ -231,6 +238,7 @@ class ARSLearner(object):
                                                  num_rollouts = 1,
                                                  shift = self.shift,
                                                  evaluate=evaluate) for worker in self.workers[:(num_deltas % self.num_workers)]]
+
         # gather results 
         results_one = ray.get(rollout_ids_one)
         results_two = ray.get(rollout_ids_two)
@@ -356,7 +364,7 @@ def run_ars(params):
 
     env = gym.make(params['env_name'])
     ob_dim = env.observation_space.shape[0]
-    ac_dim = env.action_space.n
+    ac_dim = env.action_space.shape[0]
 
     # set policy parameters. Possible filters: 'MeanStdFilter' for v2, 'NoFilter' for v1.
     policy_params={'type':'linear',
@@ -385,13 +393,13 @@ def run_ars(params):
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--env_name', type=str, default='Breakout-v0')
+    parser.add_argument('--env_name', type=str, default='HalfCheetah-v1')
     parser.add_argument('--n_iter', '-n', type=int, default=1000)
     parser.add_argument('--n_directions', '-nd', type=int, default=8)
     parser.add_argument('--deltas_used', '-du', type=int, default=8)
     parser.add_argument('--step_size', '-s', type=float, default=0.02)
     parser.add_argument('--delta_std', '-std', type=float, default=.03)
-    parser.add_argument('--n_workers', '-e', type=int, default=4)
+    parser.add_argument('--n_workers', '-e', type=int, default=18)
     parser.add_argument('--rollout_length', '-r', type=int, default=1000)
 
     # for Swimmer-v1 and HalfCheetah-v1 use shift = 0
@@ -406,9 +414,8 @@ if __name__ == '__main__':
     parser.add_argument('--filter', type=str, default='MeanStdFilter')
 
     local_ip = socket.gethostbyname(socket.gethostname())
-    ray.init(redis_address= 'localhost:6379')
+    ray.init(redis_address= local_ip + ':6379')
     
     args = parser.parse_args()
     params = vars(args)
     run_ars(params)
-    ray.shutdown()

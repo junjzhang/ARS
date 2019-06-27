@@ -231,6 +231,7 @@ class ARSLearner(object):
                                                  num_rollouts = 1,
                                                  shift = self.shift,
                                                  evaluate=evaluate) for worker in self.workers[:(num_deltas % self.num_workers)]]
+
         # gather results 
         results_one = ray.get(rollout_ids_one)
         results_two = ray.get(rollout_ids_two)
@@ -391,7 +392,7 @@ if __name__ == '__main__':
     parser.add_argument('--deltas_used', '-du', type=int, default=8)
     parser.add_argument('--step_size', '-s', type=float, default=0.02)
     parser.add_argument('--delta_std', '-std', type=float, default=.03)
-    parser.add_argument('--n_workers', '-e', type=int, default=4)
+    parser.add_argument('--n_workers', '-e', type=int, default=16)
     parser.add_argument('--rollout_length', '-r', type=int, default=1000)
 
     # for Swimmer-v1 and HalfCheetah-v1 use shift = 0
@@ -411,4 +412,4 @@ if __name__ == '__main__':
     args = parser.parse_args()
     params = vars(args)
     run_ars(params)
-    ray.shutdown()
+
