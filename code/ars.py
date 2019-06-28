@@ -78,6 +78,7 @@ class Worker(object):
             action = np.trunc(action)
             action = action.astype(np.int16)
             ob, reward, done, _ = self.env.step(action)
+            #print(reward)
             steps += 1
             total_reward += (reward - shift)
             if done:
@@ -274,8 +275,10 @@ class ARSLearner(object):
         deltas_idx = deltas_idx[idx]
         rollout_rewards = rollout_rewards[idx,:]
         
-        # normalize rewards by their standard deviation
-        rollout_rewards /= np.std(rollout_rewards)
+        # normalize rewards by their standard deviationi
+        if np.max(rollout_rewards):
+            rollout_rewards /= np.std(rollout_rewards)
+
 
         t1 = time.time()
         # aggregate rollouts to form g_hat, the gradient used to compute SGD step
