@@ -33,6 +33,7 @@ class Worker(object):
 
         # initialize OpenAI environment for each worker
         self.env = gym.make(env_name)
+        #env.observation_space.shape = 210*160
         self.env.seed(env_seed)
 
         # each worker gets access to the shared noise table
@@ -70,8 +71,12 @@ class Worker(object):
         steps = 0
 
         ob = self.env.reset()
+        
         for i in range(rollout_length):
             action = self.policy.act(ob)
+            action = action/(max(action)-min(action))*4
+            action = np.trunc(action)
+            action = action.astype(np.int16)
             ob, reward, done, _ = self.env.step(action)
             steps += 1
             total_reward += (reward - shift)
@@ -163,7 +168,7 @@ class ARSLearner(object):
         env = gym.make(env_name)
         
         self.timesteps = 0
-        self.action_size = env.action_space.n
+        self.action_size = 1
         self.ob_size = env.observation_space.shape[0]
         self.num_deltas = num_deltas
         self.deltas_used = deltas_used
@@ -356,7 +361,7 @@ def run_ars(params):
 
     env = gym.make(params['env_name'])
     ob_dim = env.observation_space.shape[0]
-    ac_dim = env.action_space.n
+    ac_dim = 1
 
     # set policy parameters. Possible filters: 'MeanStdFilter' for v2, 'NoFilter' for v1.
     policy_params={'type':'linear',
@@ -385,13 +390,13 @@ def run_ars(params):
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--env_name', type=str, default='Breakout-v0')
-    parser.add_argument('--n_iter', '-n', type=int, default=1000)
+    parser.add_argument('--env_name', type=str, default='Breakout-ram-v0')
+    parser.add_argument('--n_iter', '-n', type=int, default=100)
     parser.add_argument('--n_directions', '-nd', type=int, default=8)
     parser.add_argument('--deltas_used', '-du', type=int, default=8)
     parser.add_argument('--step_size', '-s', type=float, default=0.02)
     parser.add_argument('--delta_std', '-std', type=float, default=.03)
-    parser.add_argument('--n_workers', '-e', type=int, default=4)
+    parser.add_argument('--n_workers', '-e', type=int, default=16)
     parser.add_argument('--rollout_length', '-r', type=int, default=1000)
 
     # for Swimmer-v1 and HalfCheetah-v1 use shift = 0
