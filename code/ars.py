@@ -5,7 +5,8 @@ Aurelia Guy
 Benjamin Recht 
 '''
 
-import parser
+#import parser
+import math
 import time
 import os
 import numpy as np
@@ -71,14 +72,12 @@ class Worker(object):
         steps = 0
 
         ob = self.env.reset()
-        
+        #set action        
         for i in range(rollout_length):
-            action = self.policy.act(ob)
-            action = action/(max(action)-min(action))*4
-            action = np.trunc(action)
-            action = action.astype(np.int16)
+            prob = self.policy.act(ob)
+            action = np.argmax(prob)
+            #print(action)
             ob, reward, done, _ = self.env.step(action)
-            #print(reward)
             steps += 1
             total_reward += (reward - shift)
             if done:
@@ -329,8 +328,8 @@ class ARSLearner(object):
                 logz.log_tabular("MaxRewardRollout", np.max(rewards))
                 logz.log_tabular("MinRewardRollout", np.min(rewards))
                 logz.log_tabular("timesteps", self.timesteps)
-                logz.dump_tabular()
-                
+                logz.dump_tabular(1)            
+
             t1 = time.time()
             # get statistics from all workers
             for j in range(self.num_workers):
@@ -351,7 +350,7 @@ class ARSLearner(object):
             t2 = time.time()
             print('Time to sync statistics:', t2 - t1)
                         
-        return 
+        return np.max(rewards) 
 
 def run_ars(params):
 
@@ -365,7 +364,7 @@ def run_ars(params):
 
     env = gym.make(params['env_name'])
     ob_dim = env.observation_space.shape[0]
-    ac_dim = 1
+    ac_dim = 4
 
     # set policy parameters. Possible filters: 'MeanStdFilter' for v2, 'NoFilter' for v1.
     policy_params={'type':'linear',
@@ -386,38 +385,52 @@ def run_ars(params):
                      params=params,
                      seed = params['seed'])
         
-    ARS.train(params['n_iter'])
+    max_reward = ARS.train(params['n_iter'])
        
-    return 
+    return max_reward
 
 
 if __name__ == '__main__':
-    import argparse
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--env_name', type=str, default='Breakout-ram-v0')
-    parser.add_argument('--n_iter', '-n', type=int, default=100)
-    parser.add_argument('--n_directions', '-nd', type=int, default=8)
-    parser.add_argument('--deltas_used', '-du', type=int, default=8)
-    parser.add_argument('--step_size', '-s', type=float, default=0.02)
-    parser.add_argument('--delta_std', '-std', type=float, default=.03)
-    parser.add_argument('--n_workers', '-e', type=int, default=16)
-    parser.add_argument('--rollout_length', '-r', type=int, default=1000)
+#    import argparse
+#    parser = argparse.ArgumentParser()
+#    parser.add_argument('--env_name', type=str, default='Breakout-ram-v0')
+#    parser.add_argument('--n_iter', '-n', type=int, default=10)
+#    parser.add_argument('--n_directions', '-nd', type=int, default=8)
+#    parser.add_argument('--deltas_used', '-du', type=int, default=8)
+#    parser.add_argument('--step_size', '-s', type=float, default=0.005)
+#    parser.add_argument('--delta_std', '-std', type=float, default=.03)
+#    parser.add_argument('--n_workers', '-e', type=int, default=16)
+#    parser.add_argument('--rollout_length', '-r', type=int, default=500)
 
-    # for Swimmer-v1 and HalfCheetah-v1 use shift = 0
-    # for Hopper-v1, Walker2d-v1, and Ant-v1 use shift = 1
-    # for Humanoid-v1 used shift = 5
-    parser.add_argument('--shift', type=float, default=0)
-    parser.add_argument('--seed', type=int, default=237)
-    parser.add_argument('--policy_type', type=str, default='linear')
-    parser.add_argument('--dir_path', type=str, default='data')
+
+#    parser.add_argument('--shift', type=float, default=0)
+#    parser.add_argument('--seed', type=int, default=237)
+#    parser.add_argument('--policy_type', type=str, default='linear')
+#    parser.add_argument('--dir_path', type=str, default='data')
 
     # for ARS V1 use filter = 'NoFilter'
-    parser.add_argument('--filter', type=str, default='MeanStdFilter')
+#    parser.add_argument('--filter', type=str, default='MeanStdFilter')
 
-    local_ip = socket.gethostbyname(socket.gethostname())
-    ray.init(redis_address= 'localhost:6379')
-    
-    args = parser.parse_args()
-    params = vars(args)
-    run_ars(params)
-    ray.shutdown()
+    local_ip = socket.gethostbyname(socket.gethostname())    
+#    args = parser.parse_args()
+#    params = vars(args)
+    params = {'env_name': 'Breakout-ram-v0',
+              'n_iter': 10,
+              'n_directions': 8,
+              'deltas_used': 8,
+              'step_size': 0,
+              'delta_std': 0,
+              'n_workers': 16,
+              'rollout_length': 500,
+              'shift': 0,
+              'seed': 237,
+              'policy_type': 'linear',
+              'dir_path': 'data',
+              'filter': 'MeanStdFilter'}
+    for ii in range(10):
+        for jj in range(10):
+            ray.init(redis_address= 'localhost:6379')
+            params['delta_std'] = 0.1+0.02*jj
+            params['step_size'] = math.pow(2,ii)*0.0001
+            reward = run_ars(params)
+            ray.shutdown()
