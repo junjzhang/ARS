@@ -54,7 +54,6 @@ def configure_output_dir(d=None):
     if not osp.exists(G.output_dir):
         os.makedirs(G.output_dir)
     G.output_file = open(osp.join(G.output_dir, "log.txt"), 'w')
-    atexit.register(G.output_file.close)
     print(colorize("Logging data to %s"%G.output_file.name, 'green', bold=True))
 
 def log_tabular(key, val):
@@ -69,13 +68,27 @@ def log_tabular(key, val):
     assert key not in G.log_current_row, "You already set %s this iteration. Maybe you forgot to call dump_tabular()"%key
     G.log_current_row[key] = val
 
-    
-def save_params(params):
-    with open(osp.join(G.output_dir, "params.json"), 'w') as out:
+
+
+def save_params(params,ii):
+    with open(osp.join(G.output_dir, "params"+str(ii)+".json"), 'w') as out:
         out.write(json.dumps(params, separators=(',\n','\t:\t'), sort_keys=True))
+        
+def save_data(reward,ii):
+    G.output_file.write("iter "+str(ii)+": "+"max reward"+str(reward))
+    G.output_file.write('\n')
+    
+def data_close():
+    G.output_file.close()
 
+def save_best(params,reward):
+        with open(osp.join(G.output_dir, "params_best.json"), 'w') as out_params:
+            out_params.write(json.dumps(params, separators=(',\n','\t:\t'), sort_keys=True))
+        with open(osp.join(G.output_dir,"best_reward.txt"),'w') as out_reward:
+            out_reward.write(reward+'\n','w')
+                
 
-def dump_tabular():
+def dump_tabular(save_flag):
     """
     Write all of the diagnostics from the current iteration
     """
@@ -93,12 +106,12 @@ def dump_tabular():
         print(fmt%(key, valstr))
         vals.append(val)
     print("-"*n_slashes)
-    if G.output_file is not None:
-        if G.first_row:
-            G.output_file.write("\t".join(G.log_headers))
-            G.output_file.write("\n")
-        G.output_file.write("\t".join(map(str,vals)))
-        G.output_file.write("\n")
-        G.output_file.flush()
+#    if G.output_file is not None:
+#        if G.first_row:
+#            G.output_file.write("\t".join(G.log_headers))
+#            G.output_file.write("\n")
+#        G.output_file.write("\t".join(map(str,vals)))
+#        G.output_file.write("\n")
+#        G.output_file.flush()
     G.log_current_row.clear()
     G.first_row=False
