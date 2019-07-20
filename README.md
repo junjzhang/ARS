@@ -1,4 +1,4 @@
-#This project is to test the perfomance of ARS on breakout-ram-V4
+# This project is to test the perfomance of ARS on breakout-ram-V4
 
 # Augmented Random Search (ARS)
 
