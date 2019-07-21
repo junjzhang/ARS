@@ -22,7 +22,7 @@ For more information on Ray see http://ray.readthedocs.io/en/latest/.
 First start Ray by executing a command of the following form:
 
 ```
-ray start --head --redis-port=6379 --num-cpus=15
+ray start --head --redis-port=6379 --num-cpus=16
 ```
 This command starts multiple Python processes on one machine for parallel computations with Ray. 
 Set "num_cous=X" for parallelizing ARS across X CPUs.
