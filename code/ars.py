@@ -386,8 +386,7 @@ def run_ars(params):
        
     return max_reward
 
-
-if __name__ == '__main__':
+#if __name__ == '__main__':
 #    import argparse
 #    parser = argparse.ArgumentParser()
 #    parser.add_argument('--env_name', type=str, default='Breakout-ram-v0')
@@ -410,43 +409,28 @@ if __name__ == '__main__':
 #    args = parser.parse_args()
 #    params = vars(args)
 
-    local_ip = socket.gethostbyname(socket.gethostname())
-    
-    params = {'env_name': 'Breakout-ram-v0',
-              'n_iter': 10,
-              'n_directions': 16,
-              'deltas_used': 16,
-              'step_size': 0,
-              'delta_std': 0,
-              'n_workers': 16,
-              'rollout_length': 500,
-              'shift': 0,
-              'seed': 237,
-              'policy_type': 'linear',
-              'dir_path': 'data',
-              'filter': 'MeanStdFilter'}
 
-    reward_array = np.array([])
-    best_reward = 0
-    best_params = params
+#    reward_array = np.array([])
+#    best_reward = 0
+#    best_params = params
     
-    logz.configure_output_dir(params['dir_path'])
-    ray.init(redis_address= 'localhost:6379')
-    for ii in range(10):
-        for jj in range(10):
-            print("ITER: "+str(ii)+","+str(jj))
-            params['delta_std'] = 0.1+0.02*jj
-            params['step_size'] = math.pow(2,ii)*0.0001
-            logz.save_params(params,ii*(jj-1)+jj)
-            reward = run_ars(params)
-            #record
-            reward_array = np.append(reward_array,reward)
-            logz.save_data(reward,ii*(jj-1)+jj)
+#    logz.configure_output_dir(params['dir_path'])
+#    ray.init(redis_address= 'localhost:6379')
+#    for ii in range(10):
+#        for jj in range(10):
+#            print("ITER: "+str(ii)+","+str(jj))
+#            params['delta_std'] = 0.1+0.02*jj
+#            params['step_size'] = math.pow(2,ii)*0.0001
+#            logz.save_params(params,ii*(jj-1)+jj)
+#            reward = run_ars(params)
+#            #record
+#            reward_array = np.append(reward_array,reward)
+#            logz.save_data(reward,ii*(jj-1)+jj)
             #check best
-            if best_reward<reward:
-                best_reward = reward
-                best_params = params
+#            if best_reward<reward:
+#                best_reward = reward
+#                best_params = params
                 
-    ray.shutdown()
-    logz.save_best(best_params,best_reward)
-    logz.data_close()
+#    ray.shutdown()
+#    logz.save_best(best_params,best_reward)
+#   logz.data_close()

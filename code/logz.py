@@ -71,11 +71,11 @@ def log_tabular(key, val):
 
 
 def save_params(params,ii):
-    with open(osp.join(G.output_dir, "params"+str(ii)+".json"), 'w') as out:
+    with open(osp.join(G.output_dir, "params"+ii+".json"), 'w') as out:
         out.write(json.dumps(params, separators=(',\n','\t:\t'), sort_keys=True))
         
 def save_data(reward,ii):
-    G.output_file.write("iter "+str(ii)+": "+"max reward"+str(reward))
+    G.output_file.write("iter "+ii+": "+"max reward"+str(reward))
     G.output_file.write('\n')
     
 def data_close():
