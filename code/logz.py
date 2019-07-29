@@ -85,7 +85,7 @@ def save_best(params,reward):
         with open(osp.join(G.output_dir, "params_best.json"), 'w') as out_params:
             out_params.write(json.dumps(params, separators=(',\n','\t:\t'), sort_keys=True))
         with open(osp.join(G.output_dir,"best_reward.txt"),'w') as out_reward:
-            out_reward.write(str(reward)+'\n','w')
+            out_reward.write(str(reward)+'\n')
                 
 
 def dump_tabular(save_flag):
